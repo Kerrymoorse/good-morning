@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Good Morning, Kerry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://images.unsplash.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500&display=swap">
+<style>
+/* Layout: full-bleed photo; greeting floats in the upper two-thirds; task scroller anchored to the bottom third, no page scroll on desktop. */
+:root{
+  --ink:#fbf7f1;            /* text on photo */
+  --ink-soft:rgba(251,247,241,.78);
+  --ink-faint:rgba(251,247,241,.55);
+  --glass:rgba(20,24,30,.28);
+  --glass-line:rgba(255,255,255,.22);
+  --glow:#ffd9a8;           /* warm accent, sunrise light */
+  --ready:#9fe3c2;          /* calm green for "ready" */
+  --shade:#0d1117;
+  --f-display:"Jost","Futura","Avenir Next",system-ui,sans-serif;
+  --f-cond:"Jost","Futura","Avenir Next",system-ui,sans-serif;
+  --f-body:"Jost",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{
+  background:#050608;color:var(--ink);font-family:var(--f-body);font-size:15px;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;
+}
+/* ---------- background ---------- */
+.bg{position:fixed;inset:0;z-index:0;background:
+  radial-gradient(120% 80% at 70% 30%,#3b4a63 0%,#1b2433 55%,#0d1117 100%)}
+.bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;
+  transition:opacity 2.4s ease;transform-origin:60% 40%}
+.bg img.on{opacity:1;animation:drift 60s ease-in-out infinite alternate}
+@keyframes drift{from{transform:scale(1.04) translate3d(0,0,0)}to{transform:scale(1.14) translate3d(-1.5%,-1%,0)}}
+.bg::after{content:"";position:absolute;inset:0;pointer-events:none;background:
+  linear-gradient(180deg,rgba(8,10,14,.45) 0%,rgba(8,10,14,0) 28%,rgba(8,10,14,0) 48%,rgba(8,10,14,.62) 100%),
+  linear-gradient(90deg,rgba(8,10,14,.42) 0%,rgba(8,10,14,0) 55%)}
+#fx{position:fixed;inset:0;z-index:1;pointer-events:none}
+
+/* ---------- frame ---------- */
+.page{position:relative;z-index:2;height:100vh;height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr) auto;
+  padding-block:max(22px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-bottom));
+  padding-left:max(clamp(16px,4vw,64px),env(safe-area-inset-left));
+  padding-right:max(clamp(16px,4vw,64px),env(safe-area-inset-right))}
+
+.top{display:flex;justify-content:flex-end;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.when{display:flex;flex-direction:column;gap:4px}
+.date{font-family:var(--f-cond);font-weight:400;letter-spacing:.28em;text-transform:uppercase;font-size:13px;color:var(--ink-soft)}
+.clock{font-family:var(--f-display);font-weight:200;font-size:clamp(34px,3.4vw,46px);letter-spacing:.01em;font-variant-numeric:tabular-nums;line-height:1}
+.clock small{font-size:.42em;letter-spacing:.2em;color:var(--ink-faint);margin-left:.5em;vertical-align:.5em}
+.wx{display:flex;align-items:center;gap:12px;padding:10px 16px 10px 12px;border-radius:999px;
+  background:var(--glass);border:1px solid var(--glass-line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.wx svg{width:30px;height:30px;flex:none}
+.wx-t{font-family:var(--f-display);font-size:28px;font-weight:300;line-height:1;font-variant-numeric:tabular-nums}
+.wx-d{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--ink-soft);line-height:1.25}
+.wx-d b{font-weight:600;color:var(--ink)}
+
+/* ---------- greeting ---------- */
+.hero{align-self:center;max-width:min(1100px,100%);min-width:0}
+.eyebrow{font-family:var(--f-cond);font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--glow);margin:0 0 14px;opacity:0;transition:opacity 1.2s}
+.eyebrow.show{opacity:1}
+h1{font-family:var(--f-display);font-weight:200;margin:0;line-height:1.02;letter-spacing:-.02em;
+  font-size:clamp(52px,9vw,148px);text-shadow:0 2px 40px rgba(0,0,0,.25);min-height:1em}
+h1 em{font-style:normal;font-weight:400}
+.caret{display:inline-block;width:.05em;height:.78em;background:var(--ink);margin-left:.06em;vertical-align:-.04em;animation:blink 1.05s steps(1) infinite}
+.caret.gone{opacity:0;animation:none;transition:opacity .6s}
+@keyframes blink{50%{opacity:0}}
+.phrase{font-family:var(--f-display);font-style:normal;font-weight:300;font-size:clamp(18px,1.8vw,24px);letter-spacing:.01em;
+  color:var(--ink-soft);max-width:34ch;margin:22px 0 0;line-height:1.3;text-wrap:balance;
+  opacity:0;transform:translateY(10px);transition:opacity 1.4s ease,transform 1.4s ease}
+.phrase.show{opacity:1;transform:none}
+
+/* ---------- task deck ---------- */
+.deck{--cw:clamp(150px,14vw,215px);--gap:16px;justify-self:end;width:min(50%,calc(var(--cw)*3 + var(--gap)*2));height:clamp(260px,33vh,340px);display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:14px;min-width:0}
+.deck-head{display:flex;align-items:end;justify-content:space-between;gap:12px}
+.deck-title{font-family:var(--f-cond);font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-soft)}
+.deck-title b{color:var(--ink);font-weight:600}
+.nav{display:flex;align-items:center;gap:10px}
+.nav button{width:38px;height:38px;border-radius:50%;border:1px solid var(--glass-line);background:var(--glass);
+  color:var(--ink);cursor:pointer;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;place-items:center;transition:background .25s}
+.nav button:hover{background:rgba(255,255,255,.18)}
+.nav button:focus-visible,.card:focus-visible,.shuffle:focus-visible{outline:2px solid var(--glow);outline-offset:3px}
+.count{font-family:var(--f-display);font-size:26px;font-weight:200;font-variant-numeric:tabular-nums;min-width:2.2ch;text-align:right}
+.count span{font-size:.5em;color:var(--ink-faint)}
+
+.track{display:flex;gap:var(--gap);overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:4px 2px 6px;min-height:0;
+  }
+.track::-webkit-scrollbar{display:none}
+.card{position:relative;flex:0 0 var(--cw);height:100%;border-radius:18px;overflow:hidden;scroll-snap-align:start;
+  text-decoration:none;color:var(--ink);background:#2a3140;border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 18px 40px -18px rgba(0,0,0,.6);cursor:pointer;
+  opacity:0;transform:translateY(24px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
+.card.in{opacity:1;transform:none}
+.card.in:hover{transform:translateY(-6px);box-shadow:0 26px 50px -18px rgba(0,0,0,.75)}
+.card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1.2s ease}
+.card:hover img{transform:scale(1.06)}
+.card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 30%,rgba(0,0,0,.7) 100%)}
+.card-body{position:absolute;inset:auto 0 0 0;z-index:1;padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px}
+.card-kicker{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
+.card-title{font-family:var(--f-display);font-weight:400;font-size:clamp(20px,1.7vw,24px);line-height:1.1;letter-spacing:.01em}
+.card-status{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-soft)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ink-faint);flex:none}
+.card[data-state="ready"] .dot{background:var(--ready);box-shadow:0 0 0 0 rgba(159,227,194,.7);animation:pulse 2.4s infinite}
+.card[data-state="ready"] .card-status{color:var(--ink)}
+.card[data-state="done"] .dot{background:var(--glow)}
+@keyframes pulse{70%{box-shadow:0 0 0 9px rgba(159,227,194,0)}100%{box-shadow:0 0 0 0 rgba(159,227,194,0)}}
+.play{position:absolute;top:12px;right:12px;z-index:1;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.card[data-state="ready"] .play{background:rgba(255,255,255,.92);color:#111}
+.card-cmd{position:absolute;top:16px;left:14px;z-index:1;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;
+  padding:3px 8px;border-radius:6px;background:rgba(0,0,0,.35);color:var(--ink-soft);max-width:calc(100% - 80px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- footer credit + toast ---------- */
+.credit{position:relative;z-index:2;justify-content:center;padding:0 16px 28px;z-index:3;
+  display:flex;align-items:center;gap:10px;font-size:11px;color:var(--ink-faint)}
+.credit a{color:inherit}
+.shuffle{background:none;border:0;color:var(--ink-faint);cursor:pointer;padding:4px;display:grid;place-items:center}
+.shuffle:hover{color:var(--ink)}
+.toast{position:fixed;left:50%;top:22px;transform:translate(-50%,-20px);z-index:5;opacity:0;pointer-events:none;
+  padding:10px 18px;border-radius:999px;background:rgba(15,18,24,.78);border:1px solid var(--glass-line);font-size:13px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:all .4s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- calendar (below the fold) ---------- */
+.scroll-cue{position:absolute;z-index:3;left:max(clamp(16px,4vw,64px),env(safe-area-inset-left));top:calc(100dvh - 44px);flex-direction:row!important;color:var(--ink-faint);font-size:11px;letter-spacing:.28em;text-transform:uppercase;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:4px}
+.scroll-cue:hover{color:var(--ink)}
+.day{position:relative;z-index:2;padding-bottom:96px;
+  padding-left:max(clamp(16px,4vw,64px),env(safe-area-inset-left));padding-right:max(clamp(16px,4vw,64px),env(safe-area-inset-right));
+  background:linear-gradient(180deg,rgba(5,6,8,0) 0,#050608 22vh);min-height:100vh;padding-top:30vh}
+.day-inner{max-width:900px;margin:0 auto;display:grid;gap:22px}
+.day h2{font-family:var(--f-display);font-weight:200;font-size:clamp(30px,3.2vw,42px);margin:0;line-height:1.1}
+.day .sub{font-family:var(--f-cond);font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-faint);margin:0}
+.block{display:grid;gap:16px}
+.events{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.events li{display:grid;grid-template-columns:7.5em minmax(0,1fr);gap:16px;align-items:baseline;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:17px;font-weight:300}
+.events li::before{content:"";display:none}
+.ev-time{font-variant-numeric:tabular-nums;color:var(--glow);font-size:14px;letter-spacing:.04em}
+.ev-title{min-width:0;overflow-wrap:anywhere}
+.ev-title a{color:inherit;text-decoration:none}
+.ev-title a:hover{text-decoration:underline}
+.apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));column-gap:14px;row-gap:52px}
+.app{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px 8px 14px;border-radius:18px;text-decoration:none;color:var(--ink-soft);
+  font-size:12.5px;letter-spacing:.02em;text-align:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);--o:0px;opacity:0;transform:translateY(calc(var(--o) + 90px));transition:background .25s,color .25s,opacity 1s ease var(--d,0s),transform 1.2s cubic-bezier(.16,.84,.24,1) var(--d,0s)}
+.app.in{opacity:1;transform:translateY(var(--o))}
+.app.in:hover{background:rgba(255,255,255,.12);transform:translateY(calc(var(--o) - 4px));color:var(--ink);transition-delay:0s}
+.apps{padding-bottom:28px}
+.reveal{opacity:0;transform:translateY(50px);transition:opacity 1s ease var(--d,0s),transform 1.2s cubic-bezier(.16,.84,.24,1) var(--d,0s)}
+.reveal.in{opacity:1;transform:none}
+.hero,.deck,.top{will-change:transform,opacity}
+@media (prefers-reduced-motion:reduce){.app,.reveal{opacity:1!important;transform:none!important}}
+.app:focus-visible{outline:2px solid var(--glow);outline-offset:3px}
+.app-ic{width:44px;height:44px;border-radius:12px;background:#fff;display:grid;place-items:center;overflow:hidden;font-weight:500;color:#1b2433;font-size:18px}
+.app-ic img{width:28px;height:28px}
+.app-ic.fun{color:#fff;font-weight:500;font-size:19px;text-shadow:0 1px 6px rgba(0,0,0,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+.app:hover .app-ic{transform:rotate(-6deg) scale(1.06)}
+.app-ic{transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+@media (max-width:700px){
+  body{overflow:auto}
+  .page{height:auto;min-height:100%;gap:28px}
+  .hero{padding-top:6vh}
+  .deck{height:320px;width:100%;--cw:62vw}
+  .scroll-cue{display:none}
+  .deck-title{letter-spacing:.16em;font-size:11px}
+  .apps{grid-template-columns:repeat(4,minmax(0,1fr));column-gap:10px;row-gap:40px}
+  .app{padding:12px 4px 10px;font-size:11px;gap:8px}
+  .app-ic{width:38px;height:38px}
+  .top{justify-content:space-between}
+}
+@media (prefers-reduced-motion:reduce){
+  .bg img.on{animation:none}
+  .card,.phrase,.eyebrow{transition:none}
+  .caret{animation:none}
+}
+
+/* ---------- tick off ---------- */
+.card-link{position:absolute;inset:0;z-index:2;border-radius:inherit}
+.card-link:focus-visible{outline:2px solid var(--glow);outline-offset:3px}
+.tick{position:absolute;top:12px;right:12px;z-index:3;width:34px;height:34px;border-radius:50%;padding:0;display:grid;place-items:center;cursor:pointer;
+  color:transparent;background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  transition:background .3s,border-color .3s,color .3s,transform .3s cubic-bezier(.3,1.6,.5,1)}
+.tick svg{width:18px;height:18px;stroke-dasharray:24;stroke-dashoffset:24;transition:stroke-dashoffset .35s ease .05s}
+.tick:hover{background:rgba(255,255,255,.28);color:rgba(255,255,255,.9)}
+.tick:hover svg{stroke-dashoffset:0}
+.tick:focus-visible{outline:2px solid var(--glow);outline-offset:3px}
+.card.ticked .tick{background:#6fbf86;border-color:#6fbf86;color:#fff;transform:scale(1.15)}
+.card.ticked .tick svg{stroke-dashoffset:0}
+.card.leaving{opacity:0!important;transform:translateY(-34px) scale(.9) rotate(-2.5deg)!important;filter:blur(5px);
+  transition:opacity .6s ease,transform .7s cubic-bezier(.4,0,.2,1),filter .6s ease!important;pointer-events:none}
+.card.collapse{flex-basis:0!important;margin-right:calc(var(--gap) * -1);border-width:0;transition:flex-basis .45s cubic-bezier(.4,0,.2,1),margin .45s cubic-bezier(.4,0,.2,1)!important}
+#burst{position:fixed;inset:0;width:100%;height:100%;z-index:6;pointer-events:none}
+.all-done{display:flex;align-items:center;gap:16px;padding:0 6px;color:var(--ink-soft);font-weight:300;font-size:15px;line-height:1.5;animation:fadeup 1s ease}
+.all-done b{font-weight:400;color:var(--ink);font-size:20px}
+.leafmark{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(111,191,134,.18);border:1px solid rgba(155,211,164,.5);color:#9bd3a4}
+.leafmark svg{width:26px;height:26px}
+@keyframes fadeup{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.toast{pointer-events:auto}
+.toast:not(.show){pointer-events:none}
+.toast button{margin-left:10px;background:none;border:0;padding:0;color:var(--glow);font:inherit;font-weight:500;cursor:pointer;text-decoration:underline}
+@media (prefers-reduced-motion:reduce){.card.leaving,.card.collapse{transition:none!important}}
+.toplink{font-family:var(--f-cond);font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-soft);text-decoration:none;padding:10px 2px;align-self:center;transition:color .25s}
+.toplink:hover{color:var(--ink)}
+.toplink:focus-visible{outline:2px solid var(--glow);outline-offset:4px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="bg" id="bg"><img id="imgA" alt=""><img id="imgB" alt=""></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<main class="page">
+  <header class="top">
+    <a class="toplink" href="ventures.html">Ventures</a>
+    <div class="wx" id="wx" hidden>
+      <svg id="wxIcon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></svg>
+      <div class="wx-t" id="wxTemp"></div>
+      <div class="wx-d"><b id="wxText"></b><span id="wxRange"></span></div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1><span id="typed"></span><span class="caret" id="caret"></span></h1>
+    <p class="phrase" id="phrase"></p>
+  </section>
+
+  <section class="deck" aria-label="Today's tasks">
+    <div class="deck-head">
+      <div class="deck-title">Today &middot; <b id="readyCount">5 tasks</b></div>
+      <div class="nav">
+        <button id="prev" aria-label="Previous task"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3 5 8l5 5"/></svg></button>
+        <button id="next" aria-label="Next task"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 3 5 5-5 5"/></svg></button>
+        <div class="count" id="count">01<span>/05</span></div>
+      </div>
+    </div>
+    <div class="track" id="track"></div>
+  </section>
+</main>
+
+<a class="scroll-cue" href="#today">Your day<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m3 6 5 5 5-5"/></svg></a>
+
+<section class="day" id="today" aria-label="Your day">
+  <div class="day-inner">
+    <div class="block" id="eventsBlock" hidden>
+      <p class="sub" id="calDate"></p>
+      <h2>Booked in today</h2>
+      <ul class="events" id="events"></ul>
+    </div>
+    <div class="block">
+      <p class="sub">Quick open</p>
+      <nav class="apps" id="apps" aria-label="Quick open"></nav>
+    </div>
+  </div>
+</section>
+
+<div class="credit"><span id="credit"></span>
+  <button class="shuffle" id="shuffle" aria-label="Show another photo" title="Another view">
+    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h3l6 8h3M2 12h3l1.6-2.1M11 4h3M12 2l2 2-2 2M12 10l2 2-2 2M9.4 6.1 11 4"/></svg>
+  </button>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* =========================================================
+   1. Photo library — free Unsplash photos, grouped by mood.
+   ========================================================= */
+const U = id => `https://images.unsplash.com/photo-${id}`;
+const P = {
+  c1:{id:"1568751302450-3d84e00f2348",by:"Alex Azabache",at:"Göreme, Cappadocia"},
+  c2:{id:"1666856097914-a5375130c0a7",by:"v2osk",at:"Cappadocia, Turkey"},
+  c3:{id:"1761081394839-fc67dfc2d715",by:"Haonan Wei",at:"Lake Bled, Slovenia"},
+  c4:{id:"1505159940484-eb2b9f2588e2",by:"Artem Sapegin",at:"Lake Bled, Slovenia"},
+  g4:{id:"1647955950680-6acccd325c28",by:"Luis Barreto D",at:"Cappadocia, Turkey"},
+  d1:{id:"1696580436068-f19c26850e8b",by:"Hoodh Ahmed",at:"Dhigurah, Maldives"},
+  d2:{id:"1710744722644-2114b2624557",by:"Hamdhulla Shakeeb",at:"The Maldives"},
+  d3:{id:"1562083589-3bf71182e9c2",by:"Arnaud Steckle",at:"Lake Bled, Slovenia"},
+  d4:{id:"1478088913771-e3a36f50bb63",by:"Neven Krcmarek",at:"Bled, Slovenia"},
+  d6:{id:"1580502304784-8985b7eb7260",by:"James Ting",at:"Oia, Santorini"},
+  d5:{id:"1750768685537-56e8bb8713aa",by:"Gilley Aguilar",at:"Oia, Santorini"},
+  d7:{id:"1683653123534-1e9953780a11",by:"César Badilla Miranda",at:"Guanacaste, Costa Rica"},
+  g1:{id:"1735446918160-af0b896b7a89",by:"Ken Cheung",at:"Oia, Santorini"},
+  g2:{id:"1724075637835-0f3e6af6bd2f",by:"Petros Kaltsis",at:"Oia, Santorini"},
+  g3:{id:"1667550074816-4408f1374a44",by:"thiago japyassu",at:"Fernando de Noronha, Brazil"},
+  k4:{id:"1579693207456-a3c037d9a8d4",by:"Massimiliano Morosinotto",at:"Isle of Skye, Scotland"},
+  n1:{id:"1593378026483-2a1fd46a35bd",by:"Johny Goerend",at:"Reine, Lofoten"},
+  n2:{id:"1749033133028-7fb64bd38e07",by:"Federico Bottos",at:"Lofoten, Norway"},
+  n3:{id:"1635346245281-14201c7a768a",by:"Jake Hinds",at:"Lofoten, Norway"},
+  n4:{id:"1543094038-4bfa84d58cec",by:"Wolfgang Hasselmann",at:"The Sahara"},
+  n5:{id:"1591509687996-f1c5a7cf1f6e",by:"Wolfgang Hasselmann",at:"Moroccan desert"},
+  n6:{id:"1758705023495-b64dfe01f970",by:"Wolfgang Hasselmann",at:"Under the Milky Way"},
+  k1:{id:"1532682494783-9e0268cc75b2",by:"Matt Boyle",at:"Isle of Skye, Scotland"},
+  k2:{id:"1478454830224-7ef4b3fce53c",by:"Sketch the Sun",at:"Isle of Skye, Scotland"},
+  k3:{id:"1529671496439-beb8ded2125e",by:"Malte Schmidt",at:"Isle of Skye, Scotland"},
+  r1:{id:"1513172128806-2d00531a9f20",by:"Ryoji Iwata",at:"Kyoto, Japan"},
+  r2:{id:"1752160022017-651bc6640079",by:"Julien",at:"Kyoto, Japan"},
+  r3:{id:"1573102749104-3ec684c2f094",by:"Roméo A.",at:"Kyoto, Japan"},
+  r4:{id:"1493780474015-ba834fd0ce2f",by:"Andre Benz",at:"Kyoto, Japan"},
+  f1:{id:"1601893482775-42b97b6bb1d6",by:"Tobias Rademacher",at:"The Dolomites, Italy"},
+  f2:{id:"1673982136419-d59961f46bc2",by:"Marek Piwnicki",at:"The Dolomites, Italy"},
+  f3:{id:"1747956895655-163ff55bdc6e",by:"Micah & Sammie Chaffin",at:"Rocca Pietore, Italy"},
+  f4:{id:"1732045133230-1a670eef8620",by:"Micah & Sammie Chaffin",at:"Isle of Skye, Scotland"},
+  s1:{id:"1764575329776-ac4729f0da2b",by:"Ahmet Yüksek",at:"Hallstatt, Austria"},
+  s2:{id:"1587284576302-541fa3a6469f",by:"Carlos Coronado",at:"Hallstatt, Austria"},
+  s3:{id:"1711869838320-28b56cd63e63",by:"Michal Vrba",at:"Hallstatt, Austria"},
+  s4:{id:"1484636373136-1920fca36757",by:"Alisa Anton",at:"Hallstatt, Austria"},
+};
+/* Mood = time of day × London weather. */
+const MOODS = {
+  "dawn-clear":["c1","c2","c3","g4"],
+  "dawn-cloud":["c4","k3","c3"],
+  "day-clear":["d1","d2","d3","d4","d6","s3"],
+  "day-cloud":["k1","k2","k3","s4","d4"],
+  "evening-clear":["g1","g2","g3","d5","d7","k4"],
+  "evening-cloud":["k4","f2","d5"],
+  "night-clear":["n1","n2","n3","n4","n5","n6"],
+  "night-cloud":["n3","r2","f2"],
+  "rain":["r1","r2","r3","r4"],
+  "fog":["f1","f2","f3","f4","c4"],
+  "snow":["s1","s2","s3","s4"],
+};
+
+/* =========================================================
+   2. A thought for each day — one per day, rotating.
+   ========================================================= */
+const PHRASES = [
+  "Small steps, taken daily, build empires quietly.",
+  "Your future customers are already looking for you. Be easy to find.",
+  "Do the brave thing first. Everything after it feels lighter.",
+  "Ambition is just patience with a plan.",
+  "Clarity sells. Today, say it simply.",
+  "One great funnel is worth a hundred good intentions.",
+  "Build the thing you wish had existed when you started.",
+  "Momentum loves a person who simply begins.",
+  "Your calm is a competitive advantage.",
+  "Every inbox cleared is a mind made free.",
+  "Grow at the pace of trust.",
+  "The best businesses are kind ones that scale.",
+  "Make it work, make it lovely, then make it repeatable.",
+  "You are allowed to build something big slowly.",
+  "Today's tiny improvement is next year's obvious advantage.",
+  "Help one member brilliantly; the rest will hear about it.",
+  "Focus is the quiet engine behind every success story.",
+  "Dream like a founder, work like a craftsperson.",
+  "The view from the top is built one morning at a time.",
+  "Good systems give great people their time back.",
+  "Be so useful they can't imagine their business without you.",
+  "Start where you are. Use what you have. Sketch the next step.",
+  "Bold ideas deserve gentle mornings.",
+  "Consistency compounds like interest.",
+  "A finished task is a gift to your future self.",
+  "Your work is reaching people you'll never meet. Make it count.",
+  "Progress over perfect. Ship it, then polish it.",
+  "Lead with generosity; profit follows the path it clears.",
+  "Ask what would make today easy, then do that.",
+  "Plant seeds today that someone thanks you for in a year.",
+  "The best time to build was yesterday. The next best is this morning.",
+  "Protect your energy like it's your best client.",
+  "Simple is a superpower.",
+  "Every expert you admire once had an untidy first draft.",
+  "Rise gently. Then go and change something.",
+  "Your ambition is welcome here. So is your rest.",
+];
+
+/* =========================================================
+   3. Task tiles. Clicking opens a new Claude chat with the
+      command already typed in — press Enter to start.
+   ========================================================= */
+const TASKS = [
+  {key:"triage",cmd:"/triage",title:"Triage",kicker:"Inbox · Gmail",photo:"d2",slots:[3,11]},
+  {key:"slack",cmd:"/slack-update",title:"Slack update",kicker:"HighLevel tickets",photo:"k3"},
+  {key:"whatsapp",cmd:"/whatsapp-reply-queue",title:"WhatsApp",kicker:"Reply queue",photo:"r1"},
+  {key:"facebook",cmd:"/fs-facebook-group-check",title:"Facebook group",kicker:"Community check",photo:"g3"},
+  {key:"loops",cmd:"/open-loops-sweep",title:"Open loops",kicker:"Commitments sweep",photo:"c2"},
+];
+const claudeLink = cmd => "https://claude.ai/new?q=" + encodeURIComponent(cmd) + "&surface=cowork&composer=mini";
+
+/* =========================================================
+   4. Calendar feed — paste your Google Apps Script web app
+      URL here (see calendar-feed.gs). Leave empty to hide.
+   ========================================================= */
+const CALENDAR_FEED = "https://script.google.com/macros/s/AKfycbxiUEf_oV1jYNIAQjPYOOEIrck5CeRmUWB7DfeEEZlmR8iKGkrc4V04dkOxvvEqJjc/exec";
+
+/* =========================================================
+   5. Quick open apps. Add the Marketers Toolkit link here.
+   ========================================================= */
+const APPS = [
+  {name:"Gmail",url:"https://mail.google.com/mail/u/1/#inbox",domain:"mail.google.com"},
+  {name:"WhatsApp",url:"https://web.whatsapp.com/",domain:"web.whatsapp.com"},
+  {name:"Slack",url:"https://app.slack.com/client/TBL752DM0",domain:"slack.com"},
+  {name:"Zoom",url:"https://app.zoom.us/wc/home",domain:"zoom.us"},
+  {name:"Lovable",url:"https://lovable.dev/dashboard/projects",domain:"lovable.dev"},
+  {name:"Netlify",url:"https://app.netlify.com/teams/funnelsketchers123/projects",domain:"netlify.com"},
+  {name:"GitHub",url:"https://github.com/login",domain:"github.com"},
+  {name:"Asana",url:"https://app.asana.com/1/1206285888762858/project/1206292218148705/task/1207432352789707?focus=true",domain:"asana.com"},
+  {name:"20i",url:"https://my.20i.com/login",domain:"20i.com"},
+  {name:"Marketers Toolkit",url:"https://themarketerstoolkit.com/login/",domain:"themarketerstoolkit.com"},
+  {name:"Pinterest",url:"https://uk.pinterest.com/krobertsvs/",domain:"pinterest.com"},
+  {name:"Support Hub",url:"https://claude.ai/artifact/D2NgnoggVHxs3GWLZPzLL8",icon:"star"},
+  {name:"Replit studio",url:"https://fs-support-desk.replit.app/",domain:"replit.com"},
+];
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const TZ = "Europe/London";
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function london(d=new Date()){
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:TZ,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(d).map(x=>[x.type,x.value]));
+  const h = +p.hour % 24;
+  return {date:`${p.year}-${p.month}-${p.day}`, h, m:+p.minute, mins:h*60+ +p.minute};
+}
+function dayIndex(){ const t=london(); return Math.floor(Date.parse(t.date+"T00:00:00Z")/864e5); }
+const store = {
+  get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+function toast(msg,undo){const t=$("toast");t.textContent=msg;
+  if(undo){const b=document.createElement("button");b.type="button";b.textContent="Undo";b.onclick=()=>{undo();t.classList.remove("show");};t.append(" ",b);}
+  t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),undo?6000:3800);}
+
+/* ---------- clock ---------- */
+function tickClock(){
+  if(!$("date")) return;
+  const now=new Date();
+  $("date").textContent=new Intl.DateTimeFormat("en-GB",{timeZone:TZ,weekday:"long",day:"numeric",month:"long"}).format(now);
+  $("clock").innerHTML=new Intl.DateTimeFormat("en-GB",{timeZone:TZ,hour:"2-digit",minute:"2-digit",hour12:false}).format(now)+"<small>LONDON</small>";
+}
+
+/* ---------- greeting ---------- */
+function greetingWord(h){ return h<12?"morning":h<18?"afternoon":"evening"; }
+function typeGreeting(){
+  const word=greetingWord(london().h);
+  const full=`Good ${word}, Kerry.`;
+  const el=$("typed");
+  const render=n=>{const s=full.slice(0,n);const i=s.indexOf("Kerry");el.innerHTML=i<0?s:s.slice(0,i)+"<em>"+s.slice(i)+"</em>";};
+  const finish=()=>{
+    $("phrase").textContent=PHRASES[dayIndex()%PHRASES.length];
+    setTimeout(()=>$("phrase").classList.add("show"),250);
+    setTimeout(()=>$("caret").classList.add("gone"),2600);
+    document.querySelectorAll(".card").forEach((c,i)=>setTimeout(()=>c.classList.add("in"),700+i*140)); setTimeout(()=>window.cardsRevealed=true,700);
+  };
+  if(reduce){render(full.length);finish();return;}
+  let n=0;
+  setTimeout(function step(){
+    n++;render(n);
+    if(n<full.length){const ch=full[n-1];setTimeout(step,ch===","?420:ch===" "?140:70+Math.random()*70);}
+    else finish();
+  },900);
+}
+
+/* ---------- weather (Open-Meteo, London) ---------- */
+let WX=null;
+const WX_TEXT=c=>c<=1?"Clear":c<=2?"Partly cloudy":c===3?"Overcast":c<=48?"Foggy":c<=57?"Drizzle":c<=67?"Rain":c<=77?"Snow":c<=82?"Showers":c<=86?"Snow showers":"Thunderstorms";
+const WX_KIND=c=>c<=1?"clear":c<=3?"cloud":c<=48?"fog":c<=67||(c>=80&&c<=82)||c>=95?"rain":"snow";
+const ICONS={
+  clear:'<circle cx="16" cy="16" r="6"/><path d="M16 3v3M16 26v3M3 16h3M26 16h3M6.8 6.8l2.1 2.1M23.1 23.1l2.1 2.1M6.8 25.2l2.1-2.1M23.1 8.9l2.1-2.1"/>',
+  moon:'<path d="M24 19.5A9 9 0 0 1 12.5 8a9 9 0 1 0 11.5 11.5z"/>',
+  cloud:'<path d="M9 24h14a5 5 0 0 0 .6-10A7 7 0 0 0 10 13.5 5.3 5.3 0 0 0 9 24z"/>',
+  rain:'<path d="M9 20h14a5 5 0 0 0 .6-10A7 7 0 0 0 10 9.5 5.3 5.3 0 0 0 9 20z"/><path d="M11 24l-1 3M16 24l-1 3M21 24l-1 3"/>',
+  fog:'<path d="M5 12h22M8 17h18M5 22h20M10 27h14"/>',
+  snow:'<path d="M9 19h14a5 5 0 0 0 .6-10A7 7 0 0 0 10 8.5 5.3 5.3 0 0 0 9 19z"/><path d="M11 24v.01M16 26v.01M21 24v.01M13.5 28v.01M18.5 28v.01" stroke-width="2.6"/>'
+};
+async function loadWeather(){
+  try{
+    const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude=51.5072&longitude=-0.1276&current=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=Europe%2FLondon&forecast_days=1");
+    if(!r.ok) throw 0;
+    const j=await r.json();
+    WX={temp:Math.round(j.current.temperature_2m),code:j.current.weather_code,isDay:j.current.is_day,
+        hi:Math.round(j.daily.temperature_2m_max[0]),lo:Math.round(j.daily.temperature_2m_min[0]),
+        sunrise:toMins(j.daily.sunrise[0]),sunset:toMins(j.daily.sunset[0])};
+    const kind=WX_KIND(WX.code);
+    $("wxIcon").innerHTML=kind==="clear"&&!WX.isDay?ICONS.moon:ICONS[kind];
+    $("wxTemp").textContent=WX.temp+"°";
+    $("wxText").textContent=WX_TEXT(WX.code);
+    $("wxRange").textContent=`High ${WX.hi}° · Low ${WX.lo}°`;
+    $("wx").hidden=false;
+  }catch(e){ WX=null; }
+}
+const toMins=s=>{const [h,m]=s.slice(11,16).split(":");return +h*60+ +m;};
+
+/* ---------- choose the picture ---------- */
+function period(){
+  const t=london().mins, sr=WX?WX.sunrise:7*60, ss=WX?WX.sunset:17*60;
+  if(t>=sr-60 && t<sr+90) return "dawn";
+  if(t>=sr+90 && t<ss-75) return "day";
+  if(t>=ss-75 && t<ss+50) return "evening";
+  return "night";
+}
+function mood(){
+  const p=period();
+  if(!WX) return p+"-clear";
+  const k=WX_KIND(WX.code);
+  if(k==="rain"||k==="snow") return k;
+  if(k==="fog") return p==="night"?"night-cloud":"fog";
+  return p+"-"+(k==="cloud"?"cloud":"clear");
+}
+let current=null, shuffleOffset=0, front="imgA";
+function photoUrl(p,w){return U(p.id)+`?auto=format&fit=crop&w=${w}&q=72`;}
+function showBackground(force){
+  const m=mood(), pool=MOODS[m];
+  const key=pool[(dayIndex()+shuffleOffset)%pool.length];
+  if(!force && key===current) return;
+  current=key;
+  const p=P[key], w=Math.min(3000,Math.round(innerWidth*(devicePixelRatio||1)/100)*100||1920);
+  const back=front==="imgA"?"imgB":"imgA", img=$(back);
+  img.onload=()=>{ $(back).classList.add("on"); $(front).classList.remove("on"); front=back; };
+  img.onerror=()=>{ if((showBackground.fails=(showBackground.fails||0)+1)<pool.length){shuffleOffset++;showBackground(true);} };
+  img.src=photoUrl(p,w);
+  $("credit").innerHTML=`Photo by ${p.by} on <a href="https://unsplash.com/?utm_source=good_morning&utm_medium=referral" target="_blank" rel="noopener">Unsplash</a>`;
+  startFx(m);
+}
+
+/* ---------- gentle rain / snow overlay ---------- */
+let fxRaf=0;
+function startFx(m){
+  cancelAnimationFrame(fxRaf);
+  const cv=$("fx"), ctx=cv.getContext("2d");
+  const resize=()=>{cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio;};
+  resize(); onresize=()=>{resize();};
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const kind = m==="rain"?"rain":m==="snow"?"snow":null;
+  if(!kind||reduce) return;
+  const N=kind==="rain"?140:110, dpr=devicePixelRatio;
+  const parts=Array.from({length:N},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,
+    v:kind==="rain"?(9+Math.random()*7)*dpr:(0.5+Math.random()*1.1)*dpr,r:(kind==="rain"?1:1+Math.random()*2.2)*dpr,ph:Math.random()*6}));
+  (function loop(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ctx.strokeStyle="rgba(220,230,245,.28)";ctx.fillStyle="rgba(255,255,255,.75)";ctx.lineWidth=1*dpr;
+    for(const p of parts){
+      if(kind==="rain"){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-1.5*dpr,p.y+14*dpr);ctx.stroke();p.y+=p.v;p.x-=0.3*dpr;}
+      else{p.ph+=0.01;ctx.beginPath();ctx.arc(p.x+Math.sin(p.ph)*12*dpr,p.y,p.r,0,7);ctx.fill();p.y+=p.v;}
+      if(p.y>cv.height){p.y=-20;p.x=Math.random()*cv.width;}
+    }
+    fxRaf=requestAnimationFrame(loop);
+  })();
+}
+
+/* ---------- task cards ---------- */
+const pad=n=>String(n).padStart(2,"0");
+function slotOf(task){ if(!task.slots) return null; const h=london().h; return h<task.slots[0]?0:h<task.slots[1]?1:2; }
+function tickKey(task){ const t=london(), sl=slotOf(task); return `gm:tick:${t.date}:${task.key}`+(sl?`:${sl}`:""); }
+function isTicked(task){ return !!store.get(tickKey(task)); }
+function slotState(task){
+  const t=london();
+  const started=store.get(`gm:start:${t.date}:${task.key}`+(task.slots?`:${slotOf(task)}`:""));
+  if(!task.slots) return started?{state:"idle",text:`Started ${started}`}:{state:"idle",text:"Run anytime"};
+  const [s1,s2]=task.slots, sl=slotOf(task);
+  if(sl===0) return {state:"waiting",text:`Run 1 ready at ${pad(s1)}:00`};
+  return started?{state:"idle",text:`Run ${sl} started ${started}`}:{state:"ready",text:`Run ${sl} ready · from ${pad(sl===1?s1:s2)}:00`};
+}
+let shownKeys=null;
+function renderCards(){
+  const track=$("track");
+  const visible=TASKS.filter(t=>!isTicked(t)), keys=visible.map(t=>t.key).join(",");
+  if(keys!==shownKeys && !track.querySelector(".leaving")){
+    shownKeys=keys; track.textContent="";
+    visible.forEach(task=>{
+      const c=document.createElement("div");
+      c.className="card"+(window.cardsRevealed?" in":""); c.dataset.key=task.key;
+      c.innerHTML=`<img alt="" loading="lazy" onerror="this.remove()" src="${photoUrl(P[task.photo],520)}">
+        <span class="card-cmd">${task.cmd}</span>
+        <span class="card-body"><span class="card-kicker">${task.kicker}</span><span class="card-title">${task.title}</span>
+        <span class="card-status"><span class="dot"></span><span class="st"></span></span></span>
+        <a class="card-link" href="${claudeLink(task.cmd)}" target="_blank" rel="noopener"></a>
+        <button class="tick" type="button" aria-label="Tick off ${task.title} for today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>`;
+      c.querySelector(".card-link").addEventListener("click",()=>onLaunch(task));
+      c.querySelector(".tick").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();tickOff(task,c);});
+      track.appendChild(c);
+    });
+    if(!visible.length){
+      const d=document.createElement("div"); d.className="all-done";
+      d.innerHTML=`<span class="leafmark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5 19c0-8 6-14 15-14-1 9-6 15-14 15"/><path d="M5 19 14 10"/></svg></span><span><b>All done for today.</b><br>Enjoy the view.</span>`;
+      track.appendChild(d);
+    }
+    updateCount();
+  }
+  let ready=0;
+  visible.forEach(task=>{
+    const card=track.querySelector(`[data-key="${task.key}"]`); if(!card) return;
+    const s=slotState(task);
+    card.dataset.state=s.state; card.querySelector(".st").textContent=s.text;
+    card.querySelector(".card-link").setAttribute("aria-label",`${task.title}: ${s.text}. Opens Claude with ${task.cmd} typed in.`);
+    if(s.state==="ready") ready++;
+  });
+  $("readyCount").textContent = !visible.length ? "all done" : ready ? `${ready} ready now` : `${visible.length} to do`;
+  document.title = (ready?"● ":"") + "Good Morning, Kerry";
+}
+function onLaunch(task){
+  const t=london(), stamp=`${pad(t.h)}:${pad(t.m)}`;
+  store.set(`gm:start:${t.date}:${task.key}`+(task.slots?`:${slotOf(task)}`:""), stamp);
+  try{navigator.clipboard.writeText(task.cmd)}catch(e){}
+  toast(`Opening Claude with ${task.cmd} typed in. Press Enter to start.`);
+  setTimeout(renderCards,300);
+}
+
+/* tick off: the check draws, leaves burst out, the card floats away and the row closes up */
+function tickOff(task,card){
+  if(card.classList.contains("leaving")) return;
+  const key=tickKey(task); store.set(key,Date.now());
+  card.classList.add("ticked");
+  const r=card.querySelector(".tick").getBoundingClientRect();
+  leafBurst(r.left+r.width/2, r.top+r.height/2, card.getBoundingClientRect());
+  const later=task.slots && slotOf(task)===1 ? `until Run 2 at ${pad(task.slots[1])}:00` : "until tomorrow";
+  setTimeout(()=>card.classList.add("leaving"), reduce?0:380);
+  setTimeout(()=>card.classList.add("collapse"), reduce?0:1000);
+  setTimeout(()=>{ shownKeys=null; card.remove(); renderCards(); }, reduce?50:1500);
+  toast(`${task.title} ticked off ${later}.`, ()=>{ try{localStorage.removeItem(key)}catch(e){} shownKeys=null; renderCards(); });
+}
+const burst=document.createElement("canvas"); burst.id="burst"; document.body.appendChild(burst);
+let leaves=[], burstRaf=0;
+function leafBurst(x,y,rect){
+  if(reduce) return;
+  const dpr=devicePixelRatio||1; burst.width=innerWidth*dpr; burst.height=innerHeight*dpr;
+  const cols=["#9bd3a4","#6fbf86","#c8e6a8","#4f9e6b","#e8dca6","#f3efe2"];
+  for(let i=0;i<34;i++){
+    const a=-Math.PI/2+(Math.random()-.5)*Math.PI*1.5, sp=2+Math.random()*5.5;
+    const sx=i<10?x:rect.left+Math.random()*rect.width, sy=i<10?y:rect.top+rect.height*(.2+Math.random()*.7);
+    leaves.push({x:sx*dpr,y:sy*dpr,vx:Math.cos(a)*sp*dpr,vy:Math.sin(a)*sp*dpr-1.5*dpr,rot:Math.random()*6.3,vr:(Math.random()-.5)*.18,
+      s:(5+Math.random()*7)*dpr,c:cols[i%cols.length],life:0,max:70+Math.random()*50,sway:Math.random()*6});
+  }
+  if(!burstRaf) burstRaf=requestAnimationFrame(drawLeaves);
+}
+function drawLeaves(){
+  const g=burst.getContext("2d"), dpr=devicePixelRatio||1; g.clearRect(0,0,burst.width,burst.height);
+  leaves=leaves.filter(l=>l.life<l.max);
+  for(const l of leaves){
+    l.life++; l.vx*=.97; l.vy=l.vy*.97+0.06*dpr; l.sway+=.08;
+    l.x+=l.vx+Math.sin(l.sway)*.6*dpr; l.y+=l.vy; l.rot+=l.vr;
+    const k=l.life/l.max, alpha=k<.15?k/.15:1-Math.pow((k-.15)/.85,2);
+    g.save(); g.translate(l.x,l.y); g.rotate(l.rot); g.globalAlpha=Math.max(0,alpha);
+    g.fillStyle=l.c; g.beginPath(); g.moveTo(0,-l.s); g.quadraticCurveTo(l.s*.7,0,0,l.s); g.quadraticCurveTo(-l.s*.7,0,0,-l.s); g.fill();
+    g.strokeStyle="rgba(255,255,255,.35)"; g.lineWidth=.6*dpr; g.beginPath(); g.moveTo(0,-l.s*.8); g.lineTo(0,l.s*.8); g.stroke();
+    g.restore();
+  }
+  burstRaf = leaves.length ? requestAnimationFrame(drawLeaves) : 0;
+  if(!leaves.length) g.clearRect(0,0,burst.width,burst.height);
+}
+
+/* scroller controls */
+function cardStep(){const c=$("track").querySelector(".card");return c?c.getBoundingClientRect().width+16:220;}
+function updateCount(){
+  const n=$("track").querySelectorAll(".card:not(.leaving)").length;
+  const i=n?Math.min(n,Math.round($("track").scrollLeft/cardStep())+1):0;
+  $("count").innerHTML=pad(i)+`<span>/${pad(n)}</span>`;
+  $("prev").parentElement.style.visibility = n>3 ? "visible" : "hidden";
+}
+$("prev").onclick=()=>$("track").scrollBy({left:-cardStep(),behavior:"smooth"});
+$("next").onclick=()=>$("track").scrollBy({left:cardStep(),behavior:"smooth"});
+$("track").addEventListener("scroll",updateCount,{passive:true});
+$("shuffle").onclick=()=>{shuffleOffset++;showBackground(true);};
+
+/* ---------- calendar ---------- */
+async function loadCalendar(){
+  if(!CALENDAR_FEED) return;
+  try{
+    const r=await fetch(CALENDAR_FEED,{cache:"no-store"}); if(!r.ok) throw 0;
+    const list=(await r.json()).events||[];
+    const ul=$("events"); ul.textContent="";
+    list.forEach(e=>{
+      const li=document.createElement("li");
+      const tm=document.createElement("span"); tm.className="ev-time"; tm.textContent=e.allDay?"All day":`${e.start} – ${e.end}`;
+      const tt=document.createElement("span"); tt.className="ev-title";
+      if(e.link && /^https:\/\//.test(e.link)){const a=document.createElement("a");a.href=e.link;a.target="_blank";a.rel="noopener";a.textContent=e.title;tt.appendChild(a);}
+      else tt.textContent=e.title;
+      li.append(tm,tt); ul.appendChild(li); setupScrollFx.observe&&setupScrollFx.observe(li);
+    });
+    $("calDate").textContent=new Intl.DateTimeFormat("en-GB",{timeZone:TZ,weekday:"long",day:"numeric",month:"long"}).format(new Date());
+    $("eventsBlock").hidden = list.length===0;
+  }catch(e){ $("eventsBlock").hidden=true; }
+}
+const FUN_ICONS={
+  star:{bg:"linear-gradient(140deg,#ffd76a,#ff9f43)",svg:'<path d="M12 2.8l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 16.8l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" fill="#fff" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/>'}
+};
+const FUN_BG=["linear-gradient(140deg,#8ec5fc,#e0c3fc)","linear-gradient(140deg,#a1ffce,#4fb38d)","linear-gradient(140deg,#fbc2eb,#a6c1ee)","linear-gradient(140deg,#fdcbf1,#f6a192)","linear-gradient(140deg,#84fab0,#8fd3f4)","linear-gradient(140deg,#ffecd2,#fcb69f)"];
+function funTile(ic,name,i){ ic.classList.add("fun"); ic.style.background=FUN_BG[i%FUN_BG.length]; ic.textContent=name[0]; }
+function renderApps(){
+  const nav=$("apps");
+  APPS.filter(a=>a.url).forEach((a,i)=>{
+    const el=document.createElement("a"); el.className="app"; el.href=a.url; el.target="_blank"; el.rel="noopener";
+    const ic=document.createElement("span"); ic.className="app-ic";
+    if(a.icon && FUN_ICONS[a.icon]){ const f=FUN_ICONS[a.icon]; ic.classList.add("fun"); ic.style.background=f.bg; ic.innerHTML=`<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">${f.svg}</svg>`; }
+    else {
+      ic.textContent=a.name[0];
+      const img=new Image(); img.alt=""; img.src=`https://www.google.com/s2/favicons?domain=${a.domain}&sz=128`;
+      img.onload=()=>{ if(img.naturalWidth<=16){ funTile(ic,a.name,i); return; } ic.textContent=""; ic.appendChild(img); };
+      img.onerror=()=>funTile(ic,a.name,i);
+    }
+    const lb=document.createElement("span"); lb.textContent=a.name;
+    el.append(ic,lb); nav.appendChild(el);
+  });
+}
+
+/* ---------- scroll transition: photo lifts away, day rises in ---------- */
+function setupScrollFx(){
+  const bg=$("bg"), fx=$("fx"), hero=document.querySelector(".hero"), deck=document.querySelector(".deck"), top=document.querySelector(".top"); const cue=document.querySelector(".scroll-cue");
+  let ticking=false;
+  const apply=()=>{
+    ticking=false;
+    const p=Math.min(1,Math.max(0,scrollY/innerHeight));
+    if(!reduce){
+      bg.style.transform=`translateY(${-p*28}vh) scale(${1+p*0.06})`;
+      bg.style.opacity=String(1-p*0.85);
+      fx.style.opacity=String(1-p);
+      hero.style.transform=`translateY(${-p*45}vh)`; hero.style.opacity=String(Math.max(0,1-p*1.6));
+      deck.style.transform=`translateY(${-p*18}vh)`; deck.style.opacity=String(Math.max(0,1-p*1.3));
+      top.style.opacity=String(Math.max(0,1-p*2));
+      if(cue) cue.style.opacity=String(Math.max(0,1-p*3));
+    }
+  };
+  addEventListener("scroll",()=>{if(!ticking){ticking=true;requestAnimationFrame(apply);}},{passive:true});
+  apply();
+  // staggered rise, like portrait cards lifting in at different heights
+  const offsets=[0,28,-10,18,-4,24,6,-12,20,2,14];
+  document.querySelectorAll(".app").forEach((a,i)=>{a.style.setProperty("--o",offsets[i%offsets.length]+"px");a.style.setProperty("--d",(i*0.07)+"s");});
+  document.querySelectorAll(".day .sub,.day h2,.events li").forEach((el,i)=>{el.classList.add("reveal");el.style.setProperty("--d",(i*0.06)+"s");});
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}}),{threshold:.15});
+  document.querySelectorAll(".app,.reveal").forEach(el=>io.observe(el));
+  setupScrollFx.observe=el=>{el.classList.add("reveal");io.observe(el);};
+}
+
+/* ---------- boot ---------- */
+tickClock(); renderCards(); typeGreeting(); loadCalendar(); renderApps(); setupScrollFx(); setInterval(loadCalendar,15*60*1000);
+showBackground(true);
+loadWeather().then(()=>showBackground());
+setInterval(()=>{tickClock();renderCards();},20*1000);
+setInterval(()=>loadWeather().then(()=>showBackground()),30*60*1000);
+setInterval(()=>showBackground(),5*60*1000);
+</script>
+</body>
+</html>
