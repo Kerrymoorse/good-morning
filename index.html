@@ -206,6 +206,13 @@ h1 em{font-style:normal;font-weight:400}
 .toplink{font-family:var(--f-cond);font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-soft);text-decoration:none;padding:10px 2px;align-self:center;transition:color .25s}
 .toplink:hover{color:var(--ink)}
 .toplink:focus-visible{outline:2px solid var(--glow);outline-offset:4px;border-radius:4px}
+
+/* ---------- readability: a soft dark glow that hugs the greeting and the phrase ---------- */
+.hero,.vhero{position:relative;isolation:isolate;width:fit-content}
+.hero::before,.vhero::before{content:"";position:absolute;z-index:-1;inset:-14% -10% -18% -8%;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(8,10,16,.46),rgba(8,10,16,.26) 55%,rgba(8,10,16,0));filter:blur(18px);border-radius:50%}
+h1{text-shadow:0 1px 2px rgba(0,0,0,.35),0 2px 18px rgba(0,0,0,.35),0 2px 40px rgba(0,0,0,.25)}
+.phrase{color:var(--ink);text-shadow:0 1px 2px rgba(0,0,0,.45),0 1px 12px rgba(0,0,0,.4)}
 </style>
 </head>
 <body>
